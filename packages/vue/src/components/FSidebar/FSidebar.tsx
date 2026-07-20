@@ -1,14 +1,4 @@
-import {
-  computed,
-  getCurrentInstance,
-  h,
-  inject,
-  onBeforeUnmount,
-  onMounted,
-  provide,
-  ref,
-  watch,
-} from 'vue'
+import { computed, getCurrentInstance, h, inject, onMounted, provide, ref } from 'vue'
 import type { InjectionKey, PropType, Ref } from 'vue'
 import { genericComponent, useRender } from '../../util/defineComponent'
 import { propsFactory } from '../../util/propsFactory'
@@ -122,32 +112,28 @@ export const FSidebar = genericComponent()({
       reduced,
     })
 
-    // Overlay mode closes when clicking anywhere outside the drawer.
-    function onWindowClick(e: MouseEvent) {
-      if (!isOpen.value || props.permanent) return
-      if (!(e.target as Element | null)?.closest?.('.fui-sidebar')) isOpen.value = false
+    // Overlay mode closes on an outside click via the backdrop below. The
+    // backdrop is a real element that covers the page, so the click lands on it
+    // and closes the drawer instead of passing through to whatever is beneath —
+    // no stray action fires in the "empty" space. (This replaces an older
+    // window-level click listener that closed the drawer but let the same click
+    // reach the content underneath.)
+    function closeFromBackdrop(e: MouseEvent) {
+      e.stopPropagation()
+      isOpen.value = false
     }
-    let listening = false
-    function syncListener(open: boolean) {
-      if (typeof window === 'undefined' || props.permanent) return
-      if (open && !listening) {
-        // Delay so the opening click itself doesn't immediately close it.
-        setTimeout(() => window.addEventListener('click', onWindowClick), 200)
-        listening = true
-      } else if (!open && listening) {
-        window.removeEventListener('click', onWindowClick)
-        listening = false
-      }
-    }
-    watch(isOpen, syncListener)
-    onMounted(() => syncListener(isOpen.value))
-    onBeforeUnmount(() => {
-      if (listening && typeof window !== 'undefined')
-        window.removeEventListener('click', onWindowClick)
-    })
 
-    useRender(() =>
-      h(
+    useRender(() => {
+      const backdrop =
+        !props.permanent && isOpen.value
+          ? h('div', {
+              class: 'fui-sidebar-backdrop',
+              'aria-hidden': 'true',
+              onClick: closeFromBackdrop,
+            })
+          : null
+
+      const aside = h(
         'aside',
         {
           class: [
@@ -210,7 +196,10 @@ export const FSidebar = genericComponent()({
             : null,
         ]
       )
-    )
+
+      // Backdrop first so it paints beneath the drawer; both are root-level.
+      return [backdrop, aside]
+    })
   },
 })
 

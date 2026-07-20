@@ -1,6 +1,31 @@
 @use '../../styles/tools';
 
 @include tools.layer('components') {
+  // Scrim behind the overlay (mobile) drawer. It sits just under the sidebar
+  // (z 2000) and above all page content, so a click anywhere outside the drawer
+  // lands on the scrim — which closes the drawer WITHOUT the click passing
+  // through to a button or link underneath. Never shown in permanent mode.
+  .fui-sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1999;
+    border: 0;
+    padding: 0;
+    background: rgba(0, 0, 0, 0.42);
+    -webkit-tap-highlight-color: transparent;
+    animation: fui-sidebar-backdrop-in 0.2s ease;
+  }
+  @keyframes fui-sidebar-backdrop-in {
+    from {
+      opacity: 0;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .fui-sidebar-backdrop {
+      animation: none;
+    }
+  }
+
   // Vuesax sidebar — a clean rounded drawer with a Discord-style icon rail.
   .fui-sidebar {
     --fui-sidebar-width: 260px;
@@ -14,7 +39,12 @@
     box-sizing: border-box;
     width: calc(100% - 50px);
     max-width: var(--fui-sidebar-width);
+    // dvh, not vh: on mobile, 100vh spans behind the browser's URL/toolbar chrome,
+    // which pushes the footer (e.g. a log-out button) below the visible area.
+    // dvh tracks the *visible* viewport so the whole drawer, footer included,
+    // is always in view. Fallback to vh for the few engines without dvh.
     height: 100vh;
+    height: 100dvh;
     border-radius: 0 30px 30px 0;
     background-color: rgb(var(--fui-theme-surface));
     color: rgba(var(--fui-theme-on-surface), 0.92);
