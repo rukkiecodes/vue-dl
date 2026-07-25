@@ -1,5 +1,33 @@
 # @rukkiecodes/native
 
+## 0.7.0
+
+### Minor Changes
+
+- 09d960d: Add the Autocomplete component — mirrors the web FAutocomplete: a select whose
+  menu filters as you type, where the value is always one of `items` and text that
+  never matched an option is reverted when the field is left. Built on the same
+  field shell as the Input and Select (variants, state tints, floating & pinned
+  labels, prepend/chevron icon cards, clearable, loading, hint / error / success
+  messages), plus single or multiple selection with collapsible chips,
+  `autoSelectFirst`, `customFilter`, `noDataText`, and `noFilter` +
+  `onSearchChange` for server-side search.
+
+  The suggestion menu is anchored inline rather than in a Modal, so the field
+  keeps focus and the keyboard stays up while the list filters.
+
+- 1dafa70: Add the Checkbox component — mirrors the web FCheckbox. The box fills with the
+  accent colour while the check mark draws itself on (an animated SVG dash offset,
+  no Skia, so it runs in Expo Go), plus an indeterminate dash for partial groups, a
+  custom icon slot in place of the tick, line-through labels, a loading ring, three
+  sizes, and array models so several boxes can share one selection. Honours
+  `reduceMotion` and reports `accessibilityRole="checkbox"` with a `mixed` state
+  when indeterminate.
+
+  Also fixes a type-only import in the Select's `const.ts`, which referenced a
+  non-existent `InputState` instead of `SelectState` and broke `tsc` for anyone who
+  copied the component in.
+
 ## 0.6.0
 
 ### Minor Changes
