@@ -1,6 +1,6 @@
 {
   "name": "@rukkiecodes/vue",
-  "version": "0.17.0",
+  "version": "0.18.0",
   "description": "FusionUI — a soft, modern Vue 3 design library. Accessible, token-driven and SSR-safe.",
   "type": "module",
   "license": "MIT",

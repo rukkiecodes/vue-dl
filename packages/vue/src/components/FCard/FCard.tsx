@@ -36,6 +36,14 @@ export const makeFCardProps = propsFactory(
     // Convenience props for simple cards (slots take precedence).
     image: String as PropType<string>,
     img: String as PropType<string>,
+    // Video media. When set (and no #img slot), the card renders a <video> in its
+    // media area. Defaults to a muted, looping, inline autoplay preview so the card
+    // visibly plays; set `videoAutoplay: false` for a static poster + play badge
+    // (lighter for dense grids), or `videoControls` for a full player.
+    video: String as PropType<string>,
+    poster: String as PropType<string>,
+    videoAutoplay: { type: Boolean as PropType<boolean>, default: true },
+    videoControls: { type: Boolean as PropType<boolean>, default: false },
     title: String as PropType<string>,
     text: String as PropType<string>,
     ...makeTagProps({ tag: 'div' }),
@@ -61,7 +69,9 @@ export const FCard = genericComponent()({
       frame = 0
       if (String(props.type) !== '6') return
       const el = cardRef.value
-      const img = el?.querySelector('.fui-card__img img') as HTMLElement | null
+      const img = el?.querySelector(
+        '.fui-card__img img, .fui-card__img video'
+      ) as HTMLElement | null
       if (!el || !img) return
       const rect = el.getBoundingClientRect()
       const vh = window.innerHeight || document.documentElement.clientHeight
@@ -289,7 +299,7 @@ export const FCard = genericComponent()({
 
     useRender(() => {
       const src = props.image ?? props.img
-      const hasImg = !!(slots.img || src)
+      const hasImg = !!(slots.img || src || props.video)
       const hasTitle = !!(slots.title || props.title)
       const hasText = !!(slots.text || props.text)
 
@@ -297,11 +307,37 @@ export const FCard = genericComponent()({
         ? h('div', { class: 'fui-card__interactions' }, [slots.interactions()])
         : null
 
+      // Media precedence: #img slot → video prop → image. A video autoplays muted +
+      // looped inline by default (a lively preview); with videoAutoplay:false it
+      // shows the poster frame under a play badge instead.
+      const autoplay = props.videoAutoplay !== false
+      const mediaChild = slots.img
+        ? slots.img()
+        : props.video
+          ? h('video', {
+              class: 'fui-card__video',
+              src: props.video,
+              poster: props.poster || undefined,
+              muted: true,
+              loop: autoplay,
+              autoplay,
+              playsinline: true,
+              controls: !!props.videoControls,
+              preload: 'metadata',
+            })
+          : h('img', { src, alt: '' })
+
+      const playBadge =
+        props.video && !slots.img && !autoplay && !props.videoControls
+          ? h('span', { class: 'fui-card__play', 'aria-hidden': 'true' }, [
+              h('svg', { width: '22', height: '22', viewBox: '0 0 24 24', fill: 'currentColor' }, [
+                h('path', { d: 'M8 5v14l11-7z' }),
+              ]),
+            ])
+          : null
+
       const imgNode = hasImg
-        ? h('div', { class: 'fui-card__img' }, [
-            slots.img ? slots.img() : h('img', { src, alt: '' }),
-            interactions,
-          ])
+        ? h('div', { class: 'fui-card__img' }, [mediaChild, playBadge, interactions])
         : null
 
       const titleNode = hasTitle
